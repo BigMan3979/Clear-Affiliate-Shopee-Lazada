@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Affiliate Link</title>
+</head>
+<body>
+    <h1>Loại bỏ mã Affiliate từ link</h1>
+    <form id="linkForm">
+        <label for="linkInput">Nhập link cần làm sạch:</label>
+        <input type="text" id="linkInput" placeholder="Nhập link tại đây" required>
+        <button type="submit">Làm sạch</button>
+    </form>
+    <p id="result"></p>
+
+    <script>
+        async function expandShortLink(shortLink) {
+            try {
+                const response = await fetch(shortLink, { method: 'HEAD', redirect: 'follow' });
+                return response.url || shortLink;
+            } catch (error) {
+                console.error('Không thể mở rộng link:', error.message);
+                return shortLink;
+            }
+        }
+
+        function cleanAffiliateLink(link) {
+            try {
+                const parsedUrl = new URL(link);
+                const affiliateParams = [
+                    'uls_trackid', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_source',
+                    'utm_term', 'trafficFrom', 'laz_trackid', 'mkttid', 'dsource',
+                    'laz_share_info', 'laz_token', 'exlaz', 'smtt',
+                ];
+
+                if (parsedUrl.searchParams.has('redir')) {
+                    const decodedRedir = decodeURIComponent(parsedUrl.searchParams.get('redir'));
+                    const cleanedRedir = cleanAffiliateLink(decodedRedir);
+                    parsedUrl.searchParams.set('redir', encodeURIComponent(cleanedRedir));
+                }
+
+                affiliateParams.forEach(param => parsedUrl.searchParams.delete(param));
+                return parsedUrl.origin + parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
+            } catch (error) {
+                console.error('Link không hợp lệ:', error.message);
+                return null;
+            }
+        }
+
+        document.getElementById('linkForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputLink = document.getElementById('linkInput').value;
+            document.getElementById('result').textContent = 'Đang xử lý...';
+
+            try {
+                const expandedLink = await expandShortLink(inputLink);
+                const cleanedLink = cleanAffiliateLink(expandedLink);
+                document.getElementById('result').textContent = cleanedLink
+                    ? `Link đã làm sạch: ${cleanedLink}`
+                    : 'Link không hợp lệ!';
+            } catch (error) {
+                document.getElementById('result').textContent = 'Lỗi xử lý: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
