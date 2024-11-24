@@ -15,16 +15,27 @@
     <pre id="result"></pre>
 
     <script>
-        // Hàm gọi API Vercel để mở rộng link
+        // Hàm mở rộng link rút gọn thông qua API Vercel
         async function expandShortLink(shortLink) {
             try {
                 const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
                 const response = await fetch(apiUrl);
+
+                // Kiểm tra nếu API trả về lỗi
+                if (!response.ok) {
+                    console.error('API Vercel không phản hồi đúng:', response.statusText);
+                    return shortLink;
+                }
+
+                // Lấy kết quả JSON từ API
                 const data = await response.json();
+                console.log('API trả về:', data);
+
+                // Đảm bảo resolved_url tồn tại trong kết quả trả về
                 if (data.resolved_url) {
-                    return data.resolved_url; // Kết quả trả về từ API Vercel
+                    return data.resolved_url; // Kết quả mở rộng link
                 } else {
-                    console.error('API không trả về kết quả hợp lệ.');
+                    console.error('resolved_url không tồn tại trong phản hồi API.');
                     return shortLink;
                 }
             } catch (error) {
@@ -33,7 +44,7 @@
             }
         }
 
-        // Hàm làm sạch link để loại bỏ tham số affiliate
+        // Hàm làm sạch link
         function cleanAffiliateLink(link) {
             try {
                 const parsedUrl = new URL(link);
@@ -52,23 +63,23 @@
             }
         }
 
-        // Sự kiện xử lý khi người dùng nhấn "Làm sạch"
+        // Xử lý sự kiện khi người dùng nhấn nút "Làm sạch"
         document.getElementById('linkForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputLink = document.getElementById('linkInput').value;
             const result = document.getElementById('result');
 
-            // Hiển thị kết quả từng bước
+            // Reset kết quả hiển thị
             result.textContent = `=== Loại bỏ mã Affiliate từ link rút gọn hoặc link trực tiếp ===\n`;
             result.textContent += `Nhập link cần làm sạch: ${inputLink}\n`;
             result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
 
             try {
-                // Bước 1: Mở rộng link bằng API Vercel
+                // Mở rộng link
                 const expandedLink = await expandShortLink(inputLink);
                 result.textContent += `Link gốc: ${expandedLink}\n`;
 
-                // Bước 2: Làm sạch link sau khi mở rộng
+                // Làm sạch link
                 result.textContent += `Đang làm sạch link...\n`;
                 const cleanedLink = cleanAffiliateLink(expandedLink);
 
