@@ -3,76 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clean Affiliate Link</title>
+    <title>Affiliate Link Cleaner</title>
 </head>
 <body>
-    <h1>=== Loại bỏ mã Affiliate từ link rút gọn hoặc link trực tiếp ===</h1>
-    <form id="linkForm">
-        <label for="linkInput">Nhập link cần làm sạch:</label>
-        <input type="text" id="linkInput" placeholder="Nhập link tại đây" required>
-        <button type="submit">Làm sạch</button>
-    </form>
-    <pre id="result"></pre>
+    <h1>Loại bỏ mã Affiliate từ link</h1>
+    <input id="linkInput" type="text" placeholder="Nhập link cần làm sạch" style="width: 100%; padding: 8px;">
+    <button onclick="processLink()">Làm sạch link</button>
+    <p id="result"></p>
 
     <script>
-        // Hàm mở rộng link rút gọn (theo dõi redirect)
         async function expandShortLink(shortLink) {
             try {
-                // Sử dụng fetch với HEAD để theo dõi redirect
                 const response = await fetch(shortLink, { method: 'HEAD', redirect: 'follow' });
-                return response.url || shortLink; // Lấy URL cuối cùng sau redirect
+                return response.url || shortLink;
             } catch (error) {
                 console.error('Không thể mở rộng link:', error.message);
                 return shortLink;
             }
         }
 
-        // Hàm làm sạch link để loại bỏ tham số Affiliate
         function cleanAffiliateLink(link) {
             try {
-                const parsedUrl = new URL(link);
+                const url = new URL(link);
                 const affiliateParams = [
                     'uls_trackid', 'utm_campaign', 'utm_content', 'utm_medium', 'utm_source',
-                    'utm_term', 'trafficFrom', 'laz_trackid', 'mkttid', 'dsource',
-                    'laz_share_info', 'laz_token', 'exlaz', 'smtt',
+                    'utm_term', 'trafficFrom', 'laz_trackid', 'mkttid', 'dsource', 'laz_share_info',
+                    'laz_token', 'exlaz', 'smtt',
                 ];
-
-                // Loại bỏ các tham số tiếp thị liên kết
-                affiliateParams.forEach(param => parsedUrl.searchParams.delete(param));
-                return parsedUrl.origin + parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
+                affiliateParams.forEach(param => url.searchParams.delete(param));
+                return url.origin + url.pathname + (url.search ? url.search : '');
             } catch (error) {
                 console.error('Link không hợp lệ:', error.message);
                 return null;
             }
         }
 
-        // Xử lý sự kiện nhấn nút "Làm sạch"
-        document.getElementById('linkForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        async function processLink() {
             const inputLink = document.getElementById('linkInput').value;
-            const result = document.getElementById('result');
-
-            result.textContent = `=== Loại bỏ mã Affiliate từ link rút gọn hoặc link trực tiếp ===\n`;
-            result.textContent += `Nhập link cần làm sạch: ${inputLink}\n`;
-            result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
-
-            try {
-                // Bước 1: Mở rộng link
-                const expandedLink = await expandShortLink(inputLink);
-                result.textContent += `Link gốc: ${expandedLink}\n`;
-
-                // Bước 2: Làm sạch link
-                result.textContent += `Đang làm sạch link...\n`;
-                const cleanedLink = cleanAffiliateLink(expandedLink);
-
-                // Hiển thị kết quả cuối cùng
-                result.textContent += cleanedLink
-                    ? `Link đã làm sạch: ${cleanedLink}`
-                    : `Lỗi: Không thể làm sạch link.`;
-            } catch (error) {
-                result.textContent += `Lỗi xử lý: ${error.message}`;
+            if (!inputLink) {
+                alert('Vui lòng nhập link!');
+                return;
             }
-        });
+            const expandedLink = await expandShortLink(inputLink);
+            const cleanedLink = cleanAffiliateLink(expandedLink);
+            document.getElementById('result').innerText = `Link đã làm sạch: ${cleanedLink}`;
+        }
     </script>
 </body>
 </html>
