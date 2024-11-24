@@ -21,25 +21,23 @@
                 const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
                 const response = await fetch(apiUrl);
 
-                // Kiểm tra nếu API trả về lỗi
                 if (!response.ok) {
                     console.error('API Vercel không phản hồi đúng:', response.statusText);
                     return shortLink;
                 }
 
-                // Lấy kết quả JSON từ API
                 const data = await response.json();
-                console.log('API trả về:', data);
+                console.log('Kết quả từ API:', data);
 
-                // Đảm bảo resolved_url tồn tại trong kết quả trả về
                 if (data.resolved_url) {
-                    return data.resolved_url; // Kết quả mở rộng link
+                    console.log('Link mở rộng:', data.resolved_url);
+                    return data.resolved_url; // Sử dụng kết quả API
                 } else {
-                    console.error('resolved_url không tồn tại trong phản hồi API.');
+                    console.error('API không trả về resolved_url.');
                     return shortLink;
                 }
             } catch (error) {
-                console.error('Không thể mở rộng link:', error.message);
+                console.error('Lỗi mở rộng link:', error.message);
                 return shortLink;
             }
         }
@@ -54,7 +52,6 @@
                     'laz_share_info', 'laz_token', 'exlaz', 'smtt',
                 ];
 
-                // Loại bỏ các tham số tiếp thị liên kết
                 affiliateParams.forEach(param => parsedUrl.searchParams.delete(param));
                 return parsedUrl.origin + parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
             } catch (error) {
@@ -63,27 +60,22 @@
             }
         }
 
-        // Xử lý sự kiện khi người dùng nhấn nút "Làm sạch"
+        // Xử lý sự kiện nhấn nút "Làm sạch"
         document.getElementById('linkForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputLink = document.getElementById('linkInput').value;
             const result = document.getElementById('result');
 
-            // Reset kết quả hiển thị
             result.textContent = `=== Loại bỏ mã Affiliate từ link rút gọn hoặc link trực tiếp ===\n`;
             result.textContent += `Nhập link cần làm sạch: ${inputLink}\n`;
             result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
 
             try {
-                // Mở rộng link
                 const expandedLink = await expandShortLink(inputLink);
                 result.textContent += `Link gốc: ${expandedLink}\n`;
 
-                // Làm sạch link
-                result.textContent += `Đang làm sạch link...\n`;
                 const cleanedLink = cleanAffiliateLink(expandedLink);
-
-                // Hiển thị kết quả cuối cùng
+                result.textContent += `Đang làm sạch link...\n`;
                 result.textContent += cleanedLink
                     ? `Link đã làm sạch: ${cleanedLink}`
                     : `Lỗi: Không thể làm sạch link.`;
