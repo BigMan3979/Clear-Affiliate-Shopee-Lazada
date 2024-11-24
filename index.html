@@ -15,34 +15,19 @@
     <pre id="result"></pre>
 
     <script>
-        // Hàm mở rộng link rút gọn thông qua API Vercel
+        // Hàm mở rộng link rút gọn (theo dõi redirect)
         async function expandShortLink(shortLink) {
             try {
-                const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
-                const response = await fetch(apiUrl);
-
-                if (!response.ok) {
-                    console.error('API Vercel không phản hồi đúng:', response.statusText);
-                    return shortLink;
-                }
-
-                const data = await response.json();
-                console.log('Kết quả từ API:', data);
-
-                if (data.resolved_url) {
-                    console.log('Link mở rộng:', data.resolved_url);
-                    return data.resolved_url; // Sử dụng kết quả API
-                } else {
-                    console.error('API không trả về resolved_url.');
-                    return shortLink;
-                }
+                // Sử dụng fetch với HEAD để theo dõi redirect
+                const response = await fetch(shortLink, { method: 'HEAD', redirect: 'follow' });
+                return response.url || shortLink; // Lấy URL cuối cùng sau redirect
             } catch (error) {
-                console.error('Lỗi mở rộng link:', error.message);
+                console.error('Không thể mở rộng link:', error.message);
                 return shortLink;
             }
         }
 
-        // Hàm làm sạch link
+        // Hàm làm sạch link để loại bỏ tham số Affiliate
         function cleanAffiliateLink(link) {
             try {
                 const parsedUrl = new URL(link);
@@ -52,6 +37,7 @@
                     'laz_share_info', 'laz_token', 'exlaz', 'smtt',
                 ];
 
+                // Loại bỏ các tham số tiếp thị liên kết
                 affiliateParams.forEach(param => parsedUrl.searchParams.delete(param));
                 return parsedUrl.origin + parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
             } catch (error) {
@@ -71,11 +57,15 @@
             result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
 
             try {
+                // Bước 1: Mở rộng link
                 const expandedLink = await expandShortLink(inputLink);
                 result.textContent += `Link gốc: ${expandedLink}\n`;
 
-                const cleanedLink = cleanAffiliateLink(expandedLink);
+                // Bước 2: Làm sạch link
                 result.textContent += `Đang làm sạch link...\n`;
+                const cleanedLink = cleanAffiliateLink(expandedLink);
+
+                // Hiển thị kết quả cuối cùng
                 result.textContent += cleanedLink
                     ? `Link đã làm sạch: ${cleanedLink}`
                     : `Lỗi: Không thể làm sạch link.`;
