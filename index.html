@@ -17,6 +17,7 @@
     <script>
         async function expandShortLink(shortLink) {
             try {
+                // Gọi API mở rộng link
                 const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
                 const response = await fetch(apiUrl);
                 const data = await response.json();
@@ -59,10 +60,12 @@
             result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
 
             try {
+                // Mở rộng link
                 const expandedLink = await expandShortLink(inputLink);
                 result.textContent += `Link gốc: ${expandedLink}\n`;
                 result.textContent += `Đang làm sạch link...\n`;
 
+                // Làm sạch link
                 const cleanedLink = cleanAffiliateLink(expandedLink);
                 result.textContent += cleanedLink
                     ? `Link đã làm sạch: ${cleanedLink}`
