@@ -12,23 +12,28 @@
         <input type="text" id="linkInput" placeholder="Nhập link tại đây" required>
         <button type="submit">Làm sạch</button>
     </form>
-    <pre id="result"></pre> <!-- Kết quả sẽ hiển thị ở đây -->
+    <pre id="result"></pre>
 
     <script>
-        // Hàm mở rộng link rút gọn thông qua API trên Vercel
+        // Hàm gọi API Vercel để mở rộng link
         async function expandShortLink(shortLink) {
             try {
                 const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                return data.resolved_url || shortLink;
+                if (data.resolved_url) {
+                    return data.resolved_url; // Kết quả trả về từ API Vercel
+                } else {
+                    console.error('API không trả về kết quả hợp lệ.');
+                    return shortLink;
+                }
             } catch (error) {
                 console.error('Không thể mở rộng link:', error.message);
                 return shortLink;
             }
         }
 
-        // Hàm làm sạch link, loại bỏ tham số Affiliate
+        // Hàm làm sạch link để loại bỏ tham số affiliate
         function cleanAffiliateLink(link) {
             try {
                 const parsedUrl = new URL(link);
@@ -38,12 +43,7 @@
                     'laz_share_info', 'laz_token', 'exlaz', 'smtt',
                 ];
 
-                if (parsedUrl.searchParams.has('redir')) {
-                    const decodedRedir = decodeURIComponent(parsedUrl.searchParams.get('redir'));
-                    const cleanedRedir = cleanAffiliateLink(decodedRedir);
-                    parsedUrl.searchParams.set('redir', encodeURIComponent(cleanedRedir));
-                }
-
+                // Loại bỏ các tham số tiếp thị liên kết
                 affiliateParams.forEach(param => parsedUrl.searchParams.delete(param));
                 return parsedUrl.origin + parsedUrl.pathname + (parsedUrl.search ? parsedUrl.search : '');
             } catch (error) {
@@ -52,23 +52,23 @@
             }
         }
 
-        // Xử lý sự kiện khi nhấn nút "Làm sạch"
+        // Sự kiện xử lý khi người dùng nhấn "Làm sạch"
         document.getElementById('linkForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const inputLink = document.getElementById('linkInput').value;
             const result = document.getElementById('result');
 
-            // Reset kết quả hiển thị
+            // Hiển thị kết quả từng bước
             result.textContent = `=== Loại bỏ mã Affiliate từ link rút gọn hoặc link trực tiếp ===\n`;
             result.textContent += `Nhập link cần làm sạch: ${inputLink}\n`;
             result.textContent += `Đang kiểm tra và mở rộng link rút gọn nếu cần...\n`;
 
             try {
-                // Bước 1: Mở rộng link
+                // Bước 1: Mở rộng link bằng API Vercel
                 const expandedLink = await expandShortLink(inputLink);
                 result.textContent += `Link gốc: ${expandedLink}\n`;
 
-                // Bước 2: Làm sạch link
+                // Bước 2: Làm sạch link sau khi mở rộng
                 result.textContent += `Đang làm sạch link...\n`;
                 const cleanedLink = cleanAffiliateLink(expandedLink);
 
