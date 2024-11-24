@@ -15,18 +15,18 @@
     <pre id="result"></pre>
 
     <script>
-        async function expandShortLink(shortLink) {
-            try {
-                // Gọi API mở rộng link
-                const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                return data.resolved_url || shortLink;
-            } catch (error) {
-                console.error('Không thể mở rộng link:', error.message);
-                return shortLink;
-            }
-        }
+async function expandShortLink(shortLink) {
+    try {
+        const apiUrl = `https://expand-link-o4ptlwx3u-bigmans-projects-a2db2462.vercel.app/api/expand?url=${encodeURIComponent(shortLink)}`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        return data.resolved_url || shortLink;
+    } catch (error) {
+        console.error('Không thể mở rộng link:', error.message);
+        return shortLink;
+    }
+}
+
 
         function cleanAffiliateLink(link) {
             try {
